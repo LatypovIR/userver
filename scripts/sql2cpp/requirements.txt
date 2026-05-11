@@ -1,0 +1,3 @@
+jinja2 >= 2.10
+psycopg2-binary
+yandex-taxi-testsuite[postgresql]

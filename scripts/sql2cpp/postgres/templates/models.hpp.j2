@@ -1,0 +1,52 @@
+#pragma once
+
+{% for include in includes %}
+#include {{ include }}
+{%- endfor %}
+
+namespace {{ namespace }} {
+
+{% for enum in enums %}
+enum class {{ enum.cpp_name }} {
+{%- for entry in enum.entries %}
+    {{ entry.cpp_name }},
+{%- endfor %}
+};
+{% endfor %}
+
+{% for struct in structs %}
+struct {{ struct.cpp_name }} {
+{%- for field in struct.fields %}
+    {{ field.cpp_type }} {{ field.cpp_name }};
+{%- endfor %}
+};
+{% endfor %}
+
+{% for alias in aliases %}
+using {{ alias.cpp_name_from }} = {{ alias.cpp_name_to }};
+{%- endfor %}
+
+} // namespace {{ namespace }}
+
+namespace USERVER_NAMESPACE::storages::postgres::io {
+
+{% for enum in enums %}
+template <>
+struct CppToUserPg<{{namespace}}::{{ enum.cpp_name }}> : EnumMappingBase<{{ namespace }}::{{ enum.cpp_name }}> {
+    static constexpr DBTypeName postgres_name = "{{ enum.pg_name }}";
+    static constexpr EnumeratorList enumerators{
+        {%- for entry in enum.entries %}
+        {EnumType::{{ entry.cpp_name }}, "{{ entry.pg_name }}"},
+        {%- endfor %}
+    };
+};
+{% endfor %}
+
+{% for struct in structs %}
+template <>
+struct CppToUserPg<{{ namespace }}::{{ struct.cpp_name }}> {
+    static constexpr DBTypeName postgres_name = "{{ struct.pg_name }}";
+};
+{% endfor %}
+
+}  // namespace USERVER_NAMESPACE::storages::postgres::io
