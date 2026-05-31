@@ -1,1 +1,1 @@
-DELETE FROM key_value_table WHERE key=$1
+DELETE FROM service.key_value_table WHERE key=$1

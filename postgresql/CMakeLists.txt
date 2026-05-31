@@ -69,12 +69,12 @@ _userver_directory_install(
 )
 _userver_directory_install(
     COMPONENT postgres
-    FILES "${USERVER_ROOT_DIR}/cmake/UserverSql2Cpp.cmake"
+    FILES "${USERVER_ROOT_DIR}/cmake/UserverSqlDTO.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/userver"
 )
 _userver_directory_install(
     COMPONENT postgres
-    DIRECTORY "${USERVER_ROOT_DIR}/scripts/sql2cpp"
+    DIRECTORY "${USERVER_ROOT_DIR}/scripts/sqldto"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/userver/scripts"
 )
 
@@ -84,4 +84,4 @@ endif()
 
 set(USERVER_DIR "${USERVER_ROOT_DIR}")
 include(UserverSql)
-include(UserverSql2Cpp)
+include(UserverSqlDTO)

@@ -1,3 +1,4 @@
 jinja2 >= 2.10
-psycopg2-binary
+sqlparse
+psycopg2-binary >= 2.8.0
 yandex-taxi-testsuite[postgresql]

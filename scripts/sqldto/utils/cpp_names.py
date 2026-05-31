@@ -1,4 +1,4 @@
-from sql2cpp.utils import cpp_keywords
+from sqldto.utils import cpp_keywords
 
 
 def camel_case(string: str, no_lower_casing: bool = False) -> str:

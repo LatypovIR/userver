@@ -30,13 +30,15 @@ userver_testsuite_add_simple(SQL_LIBRARY ${PROJECT_NAME}_sql)
 # /// [Postgres sql coverage - CMakeLists.txt]SQL_FILES
 
 
-userver_add_sql2cpp_library(
-    ${PROJECT_NAME}_sql2cpp
+userver_add_sqldto_library(
+    ${PROJECT_NAME}_sqldto
     NAMESPACE
     samples_pg_service
     OUTPUT_DIR
     ${CMAKE_CURRENT_BINARY_DIR}
     PG_MIGRATIONS_DIR
     schemas/postgresql
+    PG_QUERIES_DIR
+    queries
 )
-target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_sql2cpp)
+target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_sqldto)

@@ -1,16 +1,20 @@
 from __future__ import annotations
-import tempfile
+
 import psycopg2
+import tempfile
 import typing
 
+from sqldto.utils import log
 from testsuite.databases.pgsql import service
 from testsuite.environment.service import ScriptService
+
+logger = log.logger
 
 
 class PgRunner:
     def __init__(
-            self,
-            service_name='',
+        self,
+        service_name="",
     ) -> None:
         self._service_name = service_name
         self._pg_settings = service.get_service_settings()
@@ -21,7 +25,7 @@ class PgRunner:
         return psycopg2.connect(
             host=self._pg_settings.get_conninfo().host,
             port=self._pg_settings.get_conninfo().port,
-            dbname='postgres',
+            dbname="postgres",
             user=self._pg_settings.get_conninfo().user,
         )
 
@@ -33,7 +37,8 @@ class PgRunner:
             settings=self._pg_settings,
         )
         self._pg_service.ensure_started(verbose=verbose)
-        print(self._pg_settings.get_conninfo().get_uri())
+        logger.debug("PostgreSQL URI: %s",
+                     self._pg_settings.get_conninfo().get_uri())
 
     def stop(self, verbose=0) -> None:
         if self._pg_service:

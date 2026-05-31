@@ -1,0 +1,46 @@
+{%- macro simple_cpp_type(type) -%}
+{%- for wrapper in type.wrappers -%}
+    {{- wrapper -}}<
+{%- endfor -%}
+{%- if not type.templates -%}
+    {{- type.typename -}}
+{%- else -%}
+    {{- type.typename -}}
+    <
+    {%- for template in type.templates -%}
+        {{- template.value -}}
+        {%- if not loop.last -%},{%- endif -%}
+    {%- endfor -%}
+    >
+{%- endif -%}
+{%- for wrapper in type.wrappers -%}
+    >
+{%- endfor -%}
+{%- endmacro -%}
+
+
+{%- macro row_type(types) -%}
+{%- if types | length == 1 -%}
+    {{- simple_cpp_type(types[0].cpp_type) -}}
+{%- else -%}
+    std::tuple<
+    {%- for type in types -%}
+        {{- simple_cpp_type(type.cpp_type) -}}
+        {%- if not loop.last -%}, {% endif -%}
+    {%- endfor -%}
+    >
+{%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro query_return_type(query) -%}
+{%- if not query.returns -%}
+    void
+{%- elif query.cardinality == "one" -%}
+    {{- row_type(query.returns) -}}
+{%- elif query.cardinality == "optional" -%}
+    std::optional<{{- row_type(query.returns) -}}>
+{%- else -%}
+    std::vector<{{- row_type(query.returns) -}}>
+{%- endif -%}
+{%- endmacro -%}

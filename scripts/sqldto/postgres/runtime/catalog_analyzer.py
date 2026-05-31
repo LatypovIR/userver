@@ -1,26 +1,23 @@
 from __future__ import annotations
 
-from sql2cpp.postgres import models, runner
+from sqldto.sql import models
 
 
-class PgSchemaAnalyzer:
+class PgCatalogAnalyzer:
     def __init__(self):
-        self.schema: models.PgSchema = models.PgSchema(tables={}, types={}, enums={})
+        self.catalog: models.Catalog = models.Catalog(
+            tables={}, types={}, enums={}
+        )
 
-    def get_schema(self) -> models.PgSchema:
-        return self.schema
+    def apply_migrations(self, cursor, migrations: list[models.Migration]) -> None:
+        for migration in migrations:
+            self.apply_migration(cursor, migration)
 
-    def fetch_schema(self, migrations: list[models.PgMigration]) -> models.PgSchema:
-        with runner.PgRunner() as pg, pg.connect() as conn, conn.cursor() as cursor:
-            for migration in migrations:
-                cursor.execute(migration.sql)
-                self.update_schema(cursor)
+    def apply_migration(self, cursor, migration: models.Migration) -> None:
+        cursor.execute(migration.sql)
 
-        return self.get_schema()
-
-    def update_schema(self, cursor) -> None:
         for new_table in self.read_tables(cursor=cursor).values():
-            old_table = self.schema.tables.get(new_table.pg_name)
+            old_table = self.catalog.tables.get(new_table.db_name)
 
             if not old_table:
                 new_table.version = 0
@@ -31,14 +28,14 @@ class PgSchemaAnalyzer:
             else:
                 new_table.version = old_table.version
 
-            self.schema.tables[new_table.pg_name] = new_table
+            self.catalog.tables[new_table.db_name] = new_table
 
-        self.schema.types = self.read_types(cursor=cursor)
-        self.schema.enums = self.read_enums(cursor=cursor)
+        self.catalog.types = self.read_types(cursor=cursor)
+        self.catalog.enums = self.read_enums(cursor=cursor)
 
     @staticmethod
-    def read_tables(cursor) -> dict[str, models.PgTable]:
-        sql = '''
+    def read_tables(cursor) -> dict[str, models.Table]:
+        cursor.execute("""
             SELECT
                 nspname AS namespace_name,
                 relname AS table_name,
@@ -57,12 +54,10 @@ class PgSchemaAnalyzer:
                 c.relkind IN ('v', 'm')
             )
             ORDER BY n.nspname, c.relname, a.attnum
-        '''
-
-        cursor.execute(sql)
+        """)
         rows = cursor.fetchall()
 
-        tables: dict[str, models.PgTable] = {}
+        tables: dict[str, models.Table] = {}
         for row in rows:
             namespace_name = row[0]
             table_name = row[1]
@@ -70,29 +65,29 @@ class PgSchemaAnalyzer:
             column_type = row[3]
             column_nullable = not row[4]
 
-            column = models.PgColumn(
+            column = models.Column(
                 name=column_name,
                 type=column_type,
                 nullable=column_nullable,
             )
 
-            table = models.PgTable(
+            table = models.Table(
                 namespace=namespace_name,
                 name=table_name,
                 columns=[column],
                 version=0,
             )
 
-            if table.pg_name in tables:
-                tables[table.pg_name].columns.append(column)
+            if table.db_name in tables:
+                tables[table.db_name].columns.append(column)
             else:
-                tables[table.pg_name] = table
+                tables[table.db_name] = table
 
         return tables
 
     @staticmethod
-    def read_types(cursor) -> dict[str, models.PgType]:
-        sql = '''
+    def read_types(cursor) -> dict[str, models.StructType]:
+        cursor.execute("""
             SELECT
                 n.nspname AS namespace_name,
                 t.typname AS type_name,
@@ -108,40 +103,38 @@ class PgSchemaAnalyzer:
             AND NOT a.attisdropped
             AND n.nspname NOT IN ('pg_catalog', 'information_schema')
             ORDER BY n.nspname, c.relname, a.attnum
-        '''
-
-        cursor.execute(sql)
+        """)
         rows = cursor.fetchall()
 
-        types: dict[str, models.PgType] = {}
+        types: dict[str, models.StructType] = {}
         for row in rows:
             namespace_name = row[0]
             type_name = row[1]
             field_name = row[2]
             field_type = row[3]
 
-            field = models.PgColumn(
+            field = models.Column(
                 name=field_name,
                 type=field_type,
                 nullable=True,  # all fields are nullable
             )
 
-            type_ = models.PgType(
+            type_ = models.StructType(
                 namespace=namespace_name,
                 name=type_name,
                 fields=[field],
             )
 
-            if type_.pg_name in types:
-                types[type_.pg_name].fields.append(field)
+            if type_.db_name in types:
+                types[type_.db_name].fields.append(field)
             else:
-                types[type_.pg_name] = type_
+                types[type_.db_name] = type_
 
         return types
 
     @staticmethod
-    def read_enums(cursor) -> dict[str, models.PgEnum]:
-        sql = '''
+    def read_enums(cursor) -> dict[str, models.DbEnum]:
+        cursor.execute("""
         SELECT
             n.nspname AS namespace_name,
             t.typname AS type_name,
@@ -151,26 +144,24 @@ class PgSchemaAnalyzer:
         JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
         WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
         ORDER BY n.nspname, t.typname, e.enumsortorder
-        '''
-
-        cursor.execute(sql)
+        """)
         rows = cursor.fetchall()
 
-        enums: dict[str, models.PgEnum] = {}
+        enums: dict[str, models.DbEnum] = {}
         for row in rows:
             namespace_name = row[0]
             type_name = row[1]
             enum_value = row[2]
 
-            enum = models.PgEnum(
+            enum = models.DbEnum(
                 namespace=namespace_name,
                 name=type_name,
                 values=[enum_value],
             )
 
-            if enum.pg_name in enums:
-                enums[enum.pg_name].values.append(enum_value)
+            if enum.db_name in enums:
+                enums[enum.db_name].values.append(enum_value)
             else:
-                enums[enum.pg_name] = enum
+                enums[enum.db_name] = enum
 
         return enums
