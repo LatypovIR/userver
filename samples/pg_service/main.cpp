@@ -15,7 +15,7 @@
 #include <userver/storages/postgres/component.hpp>
 
 #include <samples_pg_service/sql_queries.hpp>
-#include <samples_pg_service/models.hpp>
+#include <samples_pg_service/pg_models.hpp>
 
 namespace samples_pg_service::pg {
 
@@ -79,7 +79,7 @@ std::string KeyValue::GetValue(std::string_view key, const server::http::HttpReq
         return {};
     }
 
-    return res.AsSingleRow<PublicKeyValueTable>().value.value();
+    return res.AsSingleRow<ServiceKeyValueTable>().value.value();
 }
 /// [Postgres service sample - GetValue]
 
@@ -100,7 +100,7 @@ std::string KeyValue::PostValue(std::string_view key, const server::http::HttpRe
     res = transaction.Execute(sql::kSelectValue, key);
     transaction.Rollback();
 
-    auto result = res.AsSingleRow<PublicKeyValueTable>().value.value();
+    auto result = res.AsSingleRow<ServiceKeyValueTable>().value.value();
     if (result != value) {
         request.SetResponseStatus(server::http::HttpStatus::kConflict);
     }

@@ -4,34 +4,29 @@
 
 #include <{{ namespace }}/pg_cluster.hpp>
 
-{% macro row_tag(query) %}
-{%- if query.returns|length == 1 -%}
-    USERVER_NAMESPACE::storages::postgres::kFieldTag
-{%- else -%}
-    USERVER_NAMESPACE::storages::postgres::kRowTag
-{%- endif -%}
-{% endmacro %}
-
-
-{% macro execute(query) %}
-cluster_->Execute(flags, kQuery {%- for arg in query.args %}, arg{{ loop.index }}{%- endfor -%})
-{% endmacro %}
-
+{%- macro execute(query) -%}
+cluster_->Execute(flags, kQuery
+{%- for arg in query.args -%}
+, arg{{ loop.index }}
+{%- endfor -%}
+)
+{%- endmacro -%}
 
 {%- macro execute_and_return(query) -%}
-    {%- if not query.returns %}
-        {{ execute(query) }}
-    {%- elif query.cardinality == "one" %}
-        return {{ execute(query) }}
-            .AsSingleRow<{{ row_type(query.returns) }}>({{ row_tag(query) }})
-    {%- elif query.cardinality == "optional" %}
-        return {{ execute(query) }}
-            .AsOptionalSingleRow<{{ row_type(query.returns) }}>({{ row_tag(query) }})
-    {%- else %}
-        return {{ execute(query) }}
-            .AsContainer<std::vector<{{ row_type(query.returns) }}>>({{ row_tag(query) }})
-    {%- endif %}
-{%- endmacro -%}
+{%- if not query.returns -%}
+    {{ execute(query) }};
+{%- else -%}
+    {% set row_tag = "USERVER_NAMESPACE::storages::postgres::kRowTag" %}
+    {% set tag = row_tag if (query.returns | length > 1) else "" %}
+    {%- if query.cardinality == "one" -%}
+    return {{ execute(query) }}.AsSingleRow<{{ row_type(query.returns) }}>({{ tag }});
+    {%- elif query.cardinality == "optional" -%}
+    return {{ execute(query) }}.AsOptionalSingleRow<{{ row_type(query.returns) }}>({{ tag }});
+    {%- else -%}
+    return {{ execute(query) }}.AsContainer<std::vector<{{ row_type(query.returns) }}>>({{ tag }});
+    {%- endif -%}
+{%- endif -%}
+{% endmacro %}
 
 namespace {{ namespace }} {
 
@@ -46,11 +41,11 @@ ClusterPgClient::ClusterPgClient(USERVER_NAMESPACE::storages::postgres::ClusterP
     {%- endfor %}
 ) {
     static const USERVER_NAMESPACE::storages::postgres::Query kQuery{R"(
-    {{ query.sql }}
+{{ query.sql }}
     )"};
 
-    {{ execute_and_return(query) }};
-};
+    {{ execute_and_return(query) }}
+}
 
 {%- endfor %}
 

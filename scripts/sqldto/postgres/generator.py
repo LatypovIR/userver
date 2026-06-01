@@ -181,6 +181,7 @@ class PgModelsGenerator:
         enums_to_generate = [
             {
                 "db_name": enum.db_name,
+                "cpp_name": self.pg_to_cpp_type(enum, includes_to_generate).typename,
                 "cpp_type": self.pg_to_cpp_type(enum, includes_to_generate),
                 "entries": [
                     {
@@ -196,6 +197,7 @@ class PgModelsGenerator:
         structs_to_generate = [
             {
                 "db_name": type_.db_name,
+                "cpp_name": self.pg_to_cpp_type(type_, includes_to_generate).typename,
                 "cpp_type": self.pg_to_cpp_type(type_, includes_to_generate),
                 "fields": [
                     {

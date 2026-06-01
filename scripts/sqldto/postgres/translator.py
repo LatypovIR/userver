@@ -143,12 +143,12 @@ def pg_to_str_cpp_type(pg_type: str) -> Optional[CppType]:
 
 def pg_to_decimal_cpp_type(pg_type: str) -> Optional[CppType]:
     mapping_with_precision = {
-        re.compile(r"^numeric\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)$"): r"decimal64::Decimal",
-        re.compile(r"^decimal\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)$"): r"decimal64::Decimal",
+        re.compile(r"^numeric\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)$"): r"USERVER_NAMESPACE::decimal64::Decimal",
+        re.compile(r"^decimal\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)$"): r"USERVER_NAMESPACE::decimal64::Decimal",
     }
     mapping_without_precision = {
-        re.compile(r"^numeric$"): r"decimal64::Decimal",
-        re.compile(r"^decimal$"): r"decimal64::Decimal",
+        re.compile(r"^numeric$"): r"USERVER_NAMESPACE::decimal64::Decimal",
+        re.compile(r"^decimal$"): r"USERVER_NAMESPACE::decimal64::Decimal",
     }
 
     precision = r"\2"
@@ -187,8 +187,8 @@ def pg_to_decimal_cpp_type(pg_type: str) -> Optional[CppType]:
 
 def pg_to_chrono_cpp_type(pg_type: str) -> Optional[CppType]:
     mapping = {
-        "timestamp without time zone": "storages::postgres::TimePointWithoutTz",
-        "timestamp with time zone": "storages::postgres::TimePointTz",
+        "timestamp without time zone": "USERVER_NAMESPACE::storages::postgres::TimePointWithoutTz",
+        "timestamp with time zone": "USERVER_NAMESPACE::storages::postgres::TimePointTz",
     }
 
     if pg_type in mapping:
@@ -202,8 +202,8 @@ def pg_to_chrono_cpp_type(pg_type: str) -> Optional[CppType]:
 
 def pg_to_json_cpp_type(pg_type: str) -> Optional[CppType]:
     mapping = {
-        "json": "formats::json::Value",
-        "jsonb": "formats::json::Value",
+        "json": "USERVER_NAMESPACE::formats::json::Value",
+        "jsonb": "USERVER_NAMESPACE::formats::json::Value",
     }
 
     if pg_type in mapping:
