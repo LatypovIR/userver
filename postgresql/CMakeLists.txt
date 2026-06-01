@@ -67,6 +67,16 @@ _userver_directory_install(
     DIRECTORY "${USERVER_ROOT_DIR}/scripts/sql"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/userver/scripts"
 )
+_userver_directory_install(
+    COMPONENT postgres
+    FILES "${USERVER_ROOT_DIR}/cmake/UserverSqlDTO.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/userver"
+)
+_userver_directory_install(
+    COMPONENT postgres
+    DIRECTORY "${USERVER_ROOT_DIR}/scripts/sqldto"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/userver/scripts"
+)
 
 if(USERVER_BUILD_TESTS)
     add_subdirectory(functional_tests)
@@ -74,3 +84,4 @@ endif()
 
 set(USERVER_DIR "${USERVER_ROOT_DIR}")
 include(UserverSql)
+include(UserverSqlDTO)

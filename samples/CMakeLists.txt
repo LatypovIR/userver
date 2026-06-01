@@ -97,6 +97,9 @@ if(USERVER_FEATURE_MONGODB)
 endif()
 
 if(USERVER_FEATURE_POSTGRESQL)
+    add_subdirectory(pg_service)
+    add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}-pg_service)
+
     add_subdirectory(postgres_service)
     add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}-postgres_service)
 
